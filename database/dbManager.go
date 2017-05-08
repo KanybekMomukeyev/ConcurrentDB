@@ -54,7 +54,7 @@ func (dbM *DbManager) followChannel() {
 
 func (dbM *DbManager) CreateSchema() {
 
-	f := func() {
+	//f := func() {
 
 		var dropPerson = `
 		DROP TABLE IF EXISTS person;
@@ -79,28 +79,28 @@ func (dbM *DbManager) CreateSchema() {
     			telcode integer
 		)`
 		dbM.DB.MustExec(schema)
-	}
+	//}
 
-	dbM.dbChannel <- f
+	//dbM.dbChannel <- f
 }
 
 func (dbM *DbManager) CreatePerson(per Person) error {
-	f := func() {
+	//f := func() {
 		tx := dbM.DB.MustBegin()
 		tx.MustExec("INSERT INTO person (first_name, last_name, email) VALUES ($1, $2, $3)", per.FirstName, per.LastName, per.Email)
 		tx.Commit()
-	}
-	dbM.dbChannel <- f
+	//}
+	//dbM.dbChannel <- f
 	return nil
 }
 
 func (dbM *DbManager) CreatePlace(pl Place) error {
-	f := func() {
+	//f := func() {
 		tx := dbM.DB.MustBegin()
 		tx.MustExec("INSERT INTO place (country, city, telcode) VALUES ($1, $2, $3)", pl.Country, pl.City, pl.TelCode)
 		tx.Commit()
-	}
-	dbM.dbChannel <- f
+	//}
+	//dbM.dbChannel <- f
 	return nil
 }
 
