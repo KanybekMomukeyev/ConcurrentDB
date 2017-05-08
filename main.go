@@ -4,35 +4,44 @@ import (
 	database "github.com/KanybekMomukeyev/ConcurrentDB/database"
 	"fmt"
 	"time"
+	_ "github.com/lib/pq"
 )
 
 func main() {
 
-	dbManager := database.NewDbManager()
+	dbMng:= database.NewDbManager()
 
-	dbManager.CreateSchema()
+	dbMng.CreateSchema()
 
-	go dbManager.CreatePerson(database.Person{"first1","last1","email1"})
-	go dbManager.CreatePerson(database.Person{"first2","last2","email2"})
-	go dbManager.CreatePerson(database.Person{"first3","last3","email3"})
-	go dbManager.CreatePerson(database.Person{"first4","last4","email4"})
-	go dbManager.CreatePerson(database.Person{"first5","last5","email5"})
-	go dbManager.CreatePerson(database.Person{"first6","last6","email6"})
+	for i := 0; i < 1000; i++ {
+		go func(k int, dBMan *database.DbManager) {
+			first := fmt.Sprintf("first is %d", k)
+			last := fmt.Sprintf("last is %d", k)
+			email := fmt.Sprintf("email is %d", k)
 
-	time.Sleep(2 * 1e9)
-
-	go dbManager.CreatePlace(database.Place{"country1","city1",1})
-	go dbManager.CreatePlace(database.Place{"country2","city2",2})
-	go dbManager.CreatePlace(database.Place{"country3","city3",3})
+			dbMng.CreatePerson(database.Person{first, last, email})
+		}(i, dbMng)
+	}
 
 	time.Sleep(2 * 1e9)
 
-	people, _ := dbManager.GetAllPeople()
+	for j := 0; j < 1000; j++ {
+		go func(k int, dBMan *database.DbManager) {
+			country := fmt.Sprintf("country is %d", k)
+			city := fmt.Sprintf("city is %d", k)
+
+			dbMng.CreatePlace(database.Place{country,city,k})
+		}(j, dbMng)
+	}
+
+	time.Sleep(2 * 1e9)
+
+	people, _ := dbMng.GetAllPeople()
 	for _, person := range people {
 		fmt.Println(person)
 	}
 
-	places, _ := dbManager.GetAllPlaces()
+	places, _ := dbMng.GetAllPlaces()
 	for _, place := range places {
 		fmt.Println(place)
 	}

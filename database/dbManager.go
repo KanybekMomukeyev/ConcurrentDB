@@ -26,19 +26,19 @@ type someInterface interface {
 	GetAllPlaces() ([]*Place, error)
 }
 
-type dbManager struct {
+type DbManager struct {
 	DB *sqlx.DB
 	dbChannel chan func()
 }
 
-func NewDbManager() *dbManager {
+func NewDbManager() *DbManager {
 
 	db, err := sqlx.Connect("postgres", "dbname=template1 host=localhost sslmode=disable")
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	dbM := new(dbManager)
+	dbM := new(DbManager)
 	dbM.DB = db
 	dbM.dbChannel = make(chan func(), 1000)
 	go dbM.followChannel()
@@ -46,13 +46,13 @@ func NewDbManager() *dbManager {
 	return dbM
 }
 
-func (dbM *dbManager) followChannel() {
+func (dbM *DbManager) followChannel() {
 	for f := range dbM.dbChannel {
 		f()
 	}
 }
 
-func (dbM *dbManager) CreateSchema() {
+func (dbM *DbManager) CreateSchema() {
 
 	f := func() {
 
@@ -84,7 +84,7 @@ func (dbM *dbManager) CreateSchema() {
 	dbM.dbChannel <- f
 }
 
-func (dbM *dbManager) CreatePerson(per Person) error {
+func (dbM *DbManager) CreatePerson(per Person) error {
 	f := func() {
 		tx := dbM.DB.MustBegin()
 		tx.MustExec("INSERT INTO person (first_name, last_name, email) VALUES ($1, $2, $3)", per.FirstName, per.LastName, per.Email)
@@ -94,7 +94,7 @@ func (dbM *dbManager) CreatePerson(per Person) error {
 	return nil
 }
 
-func (dbM *dbManager) CreatePlace(pl Place) error {
+func (dbM *DbManager) CreatePlace(pl Place) error {
 	f := func() {
 		tx := dbM.DB.MustBegin()
 		tx.MustExec("INSERT INTO place (country, city, telcode) VALUES ($1, $2, $3)", pl.Country, pl.City, pl.TelCode)
@@ -104,7 +104,7 @@ func (dbM *dbManager) CreatePlace(pl Place) error {
 	return nil
 }
 
-func (dbM *dbManager) GetAllPeople() ([]*Person, error) {
+func (dbM *DbManager) GetAllPeople() ([]*Person, error) {
 
 	rows, err := dbM.DB.Queryx("SELECT first_name, last_name, email FROM person ORDER BY first_name ASC")
 	if err != nil {
@@ -124,7 +124,7 @@ func (dbM *dbManager) GetAllPeople() ([]*Person, error) {
 	return people, nil
 }
 
-func (dbM *dbManager) GetAllPlaces() ([]*Place, error) {
+func (dbM *DbManager) GetAllPlaces() ([]*Place, error) {
 
 	rows, err := dbM.DB.Queryx("SELECT country, city, telcode FROM place ORDER BY country ASC")
 	if err != nil {
