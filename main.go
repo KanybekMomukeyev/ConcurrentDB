@@ -19,7 +19,12 @@ func main() {
 			last := fmt.Sprintf("last is %d", k)
 			email := fmt.Sprintf("email is %d", k)
 
-			dbMng.CreatePerson(database.Person{first, last, email})
+			lastId, error := dBMan.CreatePerson(database.Person{first, last, email})
+			if error != nil {
+				fmt.Println(error)
+			} else {
+				fmt.Println(lastId)
+			}
 		}(i, dbMng)
 	}
 
@@ -30,7 +35,12 @@ func main() {
 			country := fmt.Sprintf("country is %d", k)
 			city := fmt.Sprintf("city is %d", k)
 
-			dbMng.CreatePlace(database.Place{country,city,k})
+			lastId, error := dBMan.CreatePlace(database.Place{country,city,k})
+			if error != nil {
+				fmt.Println(error)
+			} else {
+				fmt.Println(lastId)
+			}
 		}(j, dbMng)
 	}
 

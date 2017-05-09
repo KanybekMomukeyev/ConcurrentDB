@@ -3,6 +3,7 @@ package database
 import (
 	"github.com/jmoiron/sqlx"
 	"log"
+	"fmt"
 )
 
 type Person struct {
@@ -11,13 +12,21 @@ type Person struct {
 	Email     string
 }
 
+func (c Person) String() string {
+	return fmt.Sprintf("[%s, %s, %s]", c.FirstName, c.LastName, c.Email)
+}
+
 type Place struct {
 	Country string
 	City    string
 	TelCode int
 }
 
-type someInterface interface {
+func (p Place) String() string {
+	return fmt.Sprintf("[%s, %s, %d]", p.Country, p.City, p.TelCode)
+}
+
+type SomeInterface interface {
 	followChannel()
 	CreateSchema()
 	CreatePerson(per Person) error
@@ -29,6 +38,8 @@ type someInterface interface {
 type DbManager struct {
 	DB *sqlx.DB
 	dbChannel chan func()
+	responseChannel chan uint64
+	errorChannel chan error
 }
 
 func NewDbManager() *DbManager {
@@ -41,6 +52,8 @@ func NewDbManager() *DbManager {
 	dbM := new(DbManager)
 	dbM.DB = db
 	dbM.dbChannel = make(chan func(), 1000)
+	dbM.responseChannel = make(chan uint64, 1000)
+	dbM.errorChannel = make(chan error, 1000)
 	go dbM.followChannel()
 
 	return dbM
@@ -68,12 +81,14 @@ func (dbM *DbManager) CreateSchema() {
 
 		var schema = `
 		CREATE TABLE IF NOT EXISTS person (
+			person_id BIGSERIAL PRIMARY KEY NOT NULL,
     			first_name text,
     			last_name text,
     			email text
 		);
 
 		CREATE TABLE IF NOT EXISTS place (
+			place_id BIGSERIAL PRIMARY KEY NOT NULL,
     			country text,
     			city text,
     			telcode integer
@@ -84,24 +99,63 @@ func (dbM *DbManager) CreateSchema() {
 	dbM.dbChannel <- f
 }
 
-func (dbM *DbManager) CreatePerson(per Person) error {
+func (dbM *DbManager) CreatePerson(per Person) (uint64, error) {
 	f := func() {
 		tx := dbM.DB.MustBegin()
-		tx.MustExec("INSERT INTO person (first_name, last_name, email) VALUES ($1, $2, $3)", per.FirstName, per.LastName, per.Email)
+
+		var lastInsertId uint64
+		err := tx.QueryRow("INSERT INTO person " +
+			"(first_name, last_name, email)" +
+			"VALUES($1, $2, $3) returning person_id;",
+			per.FirstName, per.LastName, per.Email).Scan(&lastInsertId)
+
+		if err != nil {
+			log.Fatalln(err)
+			dbM.errorChannel <- err
+		}
+
 		tx.Commit()
+
+		dbM.responseChannel <- lastInsertId
 	}
+
 	dbM.dbChannel <- f
-	return nil
+
+	select {
+	case lastInsertedId := <- dbM.responseChannel:
+		return lastInsertedId, nil
+	case error := <- dbM.errorChannel:
+		return 0, error
+	}
 }
 
-func (dbM *DbManager) CreatePlace(pl Place) error {
+func (dbM *DbManager) CreatePlace(pl Place) (uint64, error) {
 	f := func() {
 		tx := dbM.DB.MustBegin()
-		tx.MustExec("INSERT INTO place (country, city, telcode) VALUES ($1, $2, $3)", pl.Country, pl.City, pl.TelCode)
+
+		var lastInsertId uint64
+		err := tx.QueryRow("INSERT INTO place " +
+			"(country, city, telcode)" +
+			"VALUES($1, $2, $3) returning place_id;",
+			pl.Country, pl.City, pl.TelCode).Scan(&lastInsertId)
+
+		if err != nil {
+			log.Fatalln(err)
+			dbM.errorChannel <- err
+		}
+
 		tx.Commit()
+		dbM.responseChannel <- lastInsertId
 	}
+
 	dbM.dbChannel <- f
-	return nil
+
+	select {
+	case lastInsertedId := <- dbM.responseChannel:
+		return lastInsertedId, nil
+	case error := <- dbM.errorChannel:
+		return 0, error
+	}
 }
 
 func (dbM *DbManager) GetAllPeople() ([]*Person, error) {
