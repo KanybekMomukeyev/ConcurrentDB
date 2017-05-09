@@ -111,12 +111,15 @@ func (dbM *DbManager) CreatePerson(per Person) (uint64, error) {
 
 		if err != nil {
 			log.Fatalln(err)
-			dbM.errorChannel <- err
+			go func() {
+				dbM.errorChannel <- err
+			}()
 		}
 
 		tx.Commit()
-
-		dbM.responseChannel <- lastInsertId
+		go func() {
+			dbM.responseChannel <- lastInsertId
+		}()
 	}
 
 	dbM.dbChannel <- f
@@ -141,11 +144,15 @@ func (dbM *DbManager) CreatePlace(pl Place) (uint64, error) {
 
 		if err != nil {
 			log.Fatalln(err)
-			dbM.errorChannel <- err
+			go func() {
+				dbM.errorChannel <- err
+			}()
 		}
 
 		tx.Commit()
-		dbM.responseChannel <- lastInsertId
+		go func() {
+			dbM.responseChannel <- lastInsertId
+		}()
 	}
 
 	dbM.dbChannel <- f
