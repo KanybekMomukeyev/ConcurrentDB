@@ -42,9 +42,9 @@ type DbManager struct {
 	errorChannel chan error
 }
 
-func NewDbManager() *DbManager {
+func NewDbManager(path string) *DbManager {
 
-	db, err := sqlx.Connect("postgres", "dbname=template1 host=localhost sslmode=disable")
+	db, err := sqlx.Connect("postgres", path)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -54,15 +54,16 @@ func NewDbManager() *DbManager {
 	dbM.dbChannel = make(chan func(), 1000)
 	dbM.responseChannel = make(chan uint64, 1000)
 	dbM.errorChannel = make(chan error, 1000)
-	go dbM.followChannel()
-
+	dbM.followChannel()
 	return dbM
 }
 
 func (dbM *DbManager) followChannel() {
-	for f := range dbM.dbChannel {
-		f()
-	}
+	go func() {
+		for f := range dbM.dbChannel {
+			f()
+		}
+	}()
 }
 
 func (dbM *DbManager) CreateSchema() {
@@ -127,8 +128,8 @@ func (dbM *DbManager) CreatePerson(per Person) (uint64, error) {
 	select {
 	case lastInsertedId := <- dbM.responseChannel:
 		return lastInsertedId, nil
-	case error := <- dbM.errorChannel:
-		return 0, error
+	case err := <- dbM.errorChannel:
+		return 0, err
 	}
 }
 
@@ -160,8 +161,8 @@ func (dbM *DbManager) CreatePlace(pl Place) (uint64, error) {
 	select {
 	case lastInsertedId := <- dbM.responseChannel:
 		return lastInsertedId, nil
-	case error := <- dbM.errorChannel:
-		return 0, error
+	case err := <- dbM.errorChannel:
+		return 0, err
 	}
 }
 

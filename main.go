@@ -1,7 +1,7 @@
 package main
 
 import (
-	database "github.com/KanybekMomukeyev/ConcurrentDB/database"
+	"github.com/KanybekMomukeyev/ConcurrentDB/database"
 	"fmt"
 	"time"
 	_ "github.com/lib/pq"
@@ -9,7 +9,7 @@ import (
 
 func main() {
 
-	dbMng:= database.NewDbManager()
+	dbMng:= database.NewDbManager("dbname=template1 host=localhost sslmode=disable")
 
 	dbMng.CreateSchema()
 
@@ -19,9 +19,9 @@ func main() {
 			last := fmt.Sprintf("last is %d", k)
 			email := fmt.Sprintf("email is %d", k)
 
-			lastId, error := dBMan.CreatePerson(database.Person{first, last, email})
-			if error != nil {
-				fmt.Println(error)
+			lastId, err := dBMan.CreatePerson(database.Person{first, last, email})
+			if err != nil {
+				fmt.Println(err)
 			} else {
 				fmt.Println(lastId)
 			}
@@ -35,9 +35,9 @@ func main() {
 			country := fmt.Sprintf("country is %d", k)
 			city := fmt.Sprintf("city is %d", k)
 
-			lastId, error := dBMan.CreatePlace(database.Place{country,city,k})
-			if error != nil {
-				fmt.Println(error)
+			lastId, err := dBMan.CreatePlace(database.Place{country,city,k})
+			if err != nil {
+				fmt.Println(err)
 			} else {
 				fmt.Println(lastId)
 			}
