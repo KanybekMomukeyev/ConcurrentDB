@@ -34,6 +34,6 @@ func main() {
 		}
 	} ()
 
-	var input string
-	fmt.Scanln(&input)
+	//var input string
+	//fmt.Scanln(&input)
 }

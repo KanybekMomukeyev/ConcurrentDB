@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/KanybekMomukeyev/ConcurrentDB/database"
 	"fmt"
-	"time"
 	_ "github.com/lib/pq"
+	"time"
 )
 
 func main() {
@@ -15,45 +15,95 @@ func main() {
 
 	for i := 0; i < 1000; i++ {
 		go func(k int, dBMan *database.DbManager) {
+
 			first := fmt.Sprintf("first is %d", k)
 			last := fmt.Sprintf("last is %d", k)
 			email := fmt.Sprintf("email is %d", k)
 
-			lastId, err := dBMan.CreatePerson(database.Person{first, last, email})
+			person := database.Person{first, last, email}
+
+			tx := dBMan.Begin()
+
+			lastId, err := dBMan.CreatePerson(tx, person)
 			if err != nil {
 				fmt.Println(err)
 			} else {
 				fmt.Println(lastId)
 			}
+
+			country := fmt.Sprintf("country is %d", k)
+			city := fmt.Sprintf("city is %d", k)
+			place := database.Place{int64(k+1000),country,city,k}
+
+			lastId_, err := dBMan.CreatePlace(tx, place)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println(lastId_)
+			}
+
+			number, err := dBMan.Commit(tx)
+			if err != nil {
+				fmt.Println(err)
+			} else {
+				fmt.Println("----------------------------------------------------")
+				fmt.Println(number)
+			}
+
 		}(i, dbMng)
 	}
 
-	time.Sleep(2 * 1e9)
-
-	for j := 0; j < 1000; j++ {
-		go func(k int, dBMan *database.DbManager) {
-			country := fmt.Sprintf("country is %d", k)
-			city := fmt.Sprintf("city is %d", k)
-
-			lastId, err := dBMan.CreatePlace(database.Place{country,city,k})
-			if err != nil {
-				fmt.Println(err)
-			} else {
-				fmt.Println(lastId)
-			}
-		}(j, dbMng)
-	}
-
-	time.Sleep(2 * 1e9)
-
-	people, _ := dbMng.GetAllPeople()
-	for _, person := range people {
-		fmt.Println(person)
-	}
-
-	places, _ := dbMng.GetAllPlaces()
-	for _, place := range places {
-		fmt.Println(place)
-	}
+	print("111111111")
+	time.Sleep(7 * 1e9)
 }
 
+
+
+
+
+func unused()  {
+	//
+	//
+	//print("222222222")
+	//
+	//for j := 0; j < 1000; j++ {
+	//	go func(k int, dBMan *database.DbManager) {
+	//
+	//		print("33333333")
+	//
+	//		country := fmt.Sprintf("country is %d", k)
+	//		city := fmt.Sprintf("city is %d", k)
+	//
+	//		place := database.Place{int64(j+1000),country,city,k}
+	//
+	//		tx := dbMng.Begin()
+	//
+	//		lastId, err := dBMan.CreatePlace(tx, place)
+	//		if err != nil {
+	//			fmt.Println(err)
+	//		} else {
+	//			fmt.Println(lastId)
+	//		}
+	//
+	//		dBMan.Commit(tx)
+	//
+	//	}(j, dbMng)
+	//}
+	//
+	//
+	//time.Sleep(5 * 1e9)
+	//
+	////people, _ := dbMng.GetAllPeople()
+	////for _, person := range people {
+	////	fmt.Println(person)
+	////}
+	//
+	//time.Sleep(5 * 1e9)
+	//
+	////dbMng.GetAllPlacesAuto()
+	//
+	////places, _ := dbMng.GetAllPlaces()
+	////for _, place := range places {
+	////	fmt.Println(place)
+	////}
+}
