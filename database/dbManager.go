@@ -5,6 +5,7 @@ import (
 	"log"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Person struct {
@@ -27,18 +28,6 @@ type Place struct {
 func (p Place) String() string {
 	return fmt.Sprintf("[%d, %s, %s, %d]", p.PlaceId, p.Country, p.City, p.TelCode)
 }
-
-type SomeInterface interface {
-	followChannel()
-	CreateSchema()
-	CreatePerson(per Person) error
-	CreatePlace(pl Place) error
-	GetAllPeople() ([]*Person, error)
-	GetAllPlaces() ([]*Place, error)
-}
-
-var instance *sqlx.Tx
-var once sync.Once
 
 type DbManager struct {
 	DB *sqlx.DB
@@ -178,6 +167,7 @@ func (dbM *DbManager) Commit(tx *sqlx.Tx) (uint64, error) {
 		println("COMMIT__START")
 
 		err := tx.Commit()
+		time.Sleep((1 * 1e9))
 
 		if err != nil {
 			go func() {
@@ -205,6 +195,8 @@ func (dbM *DbManager) Commit(tx *sqlx.Tx) (uint64, error) {
 	}
 }
 
+var instance *sqlx.Tx
+var once sync.Once
 func (dbM *DbManager) Begin() *sqlx.Tx {
 	once.Do(func() {
 		instance = dbM.DB.MustBegin()
