@@ -2,6 +2,13 @@ package main
 
 import "sync"
 
+func NewMutCounter() *counter {
+	counter := new(counter)
+	counter.n = 0
+	counter.mu = sync.Mutex{}
+	return counter
+}
+
 type counter struct {
 	mu sync.Mutex
 	n  int
@@ -10,6 +17,12 @@ type counter struct {
 func (c *counter) Add() {
 	c.mu.Lock()
 	c.n++
+	c.mu.Unlock()
+}
+
+func (c *counter) Minus() {
+	c.mu.Lock()
+	c.n--
 	c.mu.Unlock()
 }
 
