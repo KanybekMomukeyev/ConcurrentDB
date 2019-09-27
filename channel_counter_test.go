@@ -7,8 +7,16 @@ import (
 
 func TestChannel(t *testing.T) {
 	c := NewCounter()
-	c.IncrementCounter()
-	c.DecrementCounter()
+	for i := 0; i < 10000; i++ {
+		go func(index int, c *ChannelCounter) {
+			c.IncrementCounter()
+		}(i, c)
+	}
+	for i := 0; i < 1000; i++ {
+		go func(index int, c *ChannelCounter) {
+			c.DecrementCounter()
+		}(i, c)
+	}
 	fmt.Printf("\nCOUNT = %d\n", c.currentCount)
 }
 
