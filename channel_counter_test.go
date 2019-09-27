@@ -5,19 +5,22 @@ import (
 	"testing"
 )
 
+var (
+	channelCounter = NewCounter()
+)
+
 func TestChannel(t *testing.T) {
-	c := NewCounter()
 	for i := 0; i < 10000; i++ {
-		go func(index int, c *ChannelCounter) {
-			c.IncrementCounter()
-		}(i, c)
+		go func(index int, channelCounter *ChannelCounter) {
+			channelCounter.IncrementCounter()
+		}(i, channelCounter)
 	}
 	for i := 0; i < 1000; i++ {
-		go func(index int, c *ChannelCounter) {
-			c.DecrementCounter()
-		}(i, c)
+		go func(index int, channelCounter *ChannelCounter) {
+			channelCounter.DecrementCounter()
+		}(i, channelCounter)
 	}
-	fmt.Printf("\nCOUNT = %d\n", c.currentCount)
+	fmt.Printf("\nCOUNT = %d\n", channelCounter.GetCurrentCount())
 }
 
 func BenchmarkChannel(b *testing.B) {

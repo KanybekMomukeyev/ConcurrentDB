@@ -11,8 +11,8 @@ type ChannelCounter struct {
 func NewCounter() *ChannelCounter {
 	counter := new(ChannelCounter)
 	counter.currentCount = 0
-	counter.updateChannel = make(chan func(), 10000)
-	counter.responseChannel = make(chan int, 10000)
+	counter.updateChannel = make(chan func(), 1)
+	counter.responseChannel = make(chan int, 1)
 	counter.waitForChannel()
 	return counter
 }
@@ -25,6 +25,7 @@ func (c *ChannelCounter) waitForChannel() {
 	}()
 }
 
+// IncrementCounter lala
 func (c *ChannelCounter) IncrementCounter() int {
 
 	f := func() {
@@ -40,10 +41,26 @@ func (c *ChannelCounter) IncrementCounter() int {
 	}
 }
 
+// DecrementCounter lala
 func (c *ChannelCounter) DecrementCounter() int {
 
 	f := func() {
 		c.currentCount = c.currentCount - 1
+		c.responseChannel <- c.currentCount
+	}
+
+	c.updateChannel <- f
+
+	select {
+	case currentCount := <-c.responseChannel:
+		return currentCount
+	}
+}
+
+// GetCurrentCount lala
+func (c *ChannelCounter) GetCurrentCount() int {
+
+	f := func() {
 		c.responseChannel <- c.currentCount
 	}
 

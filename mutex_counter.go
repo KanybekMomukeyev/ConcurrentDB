@@ -18,19 +18,19 @@ type counter struct {
 func (c *counter) Add() {
 	c.mu.Lock()
 	c.n++
-	c.mu.Unlock()
+	defer c.mu.Unlock()
 }
 
 func (c *counter) Minus() {
 	c.mu.Lock()
 	c.n--
-	c.mu.Unlock()
+	defer c.mu.Unlock()
 }
 
 func (c *counter) Get() int {
 	c.mu.Lock()
 	n := c.n
-	c.mu.Unlock()
+	defer c.mu.Unlock()
 	return n
 }
 
@@ -39,5 +39,5 @@ func (c *counter) Reset() {
 	if c.n > 8190 {
 		c.n = 0
 	}
-	c.mu.Unlock()
+	defer c.mu.Unlock()
 }

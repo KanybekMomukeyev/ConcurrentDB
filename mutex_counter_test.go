@@ -5,19 +5,22 @@ import (
 	"testing"
 )
 
+var (
+	mutexCounter = NewMutCounter()
+)
+
 func TestMutex(t *testing.T) {
-	c := NewMutCounter()
 	for i := 0; i < 10000; i++ {
-		go func(index int, c *counter) {
-			c.Add()
-		}(i, c)
+		go func(index int, mutexCounter *counter) {
+			mutexCounter.Add()
+		}(i, mutexCounter)
 	}
 	for i := 0; i < 1000; i++ {
-		go func(index int, c *counter) {
-			c.Minus()
-		}(i, c)
+		go func(index int, mutexCounter *counter) {
+			mutexCounter.Minus()
+		}(i, mutexCounter)
 	}
-	fmt.Printf("\nCOUNT = %d\n", c.Get())
+	fmt.Printf("\nCOUNT = %d\n", mutexCounter.Get())
 }
 
 func BenchmarkMutex(b *testing.B) {
