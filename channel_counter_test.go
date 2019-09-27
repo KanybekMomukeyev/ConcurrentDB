@@ -25,7 +25,7 @@ func TestChannel(t *testing.T) {
 
 func BenchmarkChannel(b *testing.B) {
 	c := NewCounter()
-	for n := 0; n < 1000000; n++ {
+	for n := 0; n < b.N; n++ {
 		c.IncrementCounter()
 		c.DecrementCounter()
 	}
