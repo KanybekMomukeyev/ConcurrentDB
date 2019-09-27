@@ -2,6 +2,7 @@ package main
 
 import "sync"
 
+// NewMutCounter lalal
 func NewMutCounter() *counter {
 	counter := new(counter)
 	counter.n = 0

@@ -1,16 +1,18 @@
 package main
 
+// ChannelCounter lalal
 type ChannelCounter struct {
 	currentCount    int
 	updateChannel   chan func()
 	responseChannel chan int
 }
 
+// NewCounter lalal
 func NewCounter() *ChannelCounter {
 	counter := new(ChannelCounter)
 	counter.currentCount = 0
-	counter.updateChannel = make(chan func(), 1)
-	counter.responseChannel = make(chan int, 1)
+	counter.updateChannel = make(chan func(), 10000)
+	counter.responseChannel = make(chan int, 10000)
 	counter.waitForChannel()
 	return counter
 }
